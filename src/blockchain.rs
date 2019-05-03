@@ -1,3 +1,19 @@
+use chrono::{DateTime, Utc};
+
+struct Transaction<'a> {
+    sender: &'a str,
+    recipient: &'a str,
+    amount: i64,
+}
+
+struct Block<'a> {
+    index: u64,
+    timestamp: DateTime<Utc>,
+    transactions: Vec<Transaction<'a>>,
+    proof: u64,
+    previous_hash: &'a str,
+}
+
 #[derive(Default)]
 pub struct Blockchain<T> {
     chain: Vec<T>,
