@@ -1,12 +1,9 @@
 #![crate_name = "blockchain_example"]
 
+pub mod api;
 pub mod blockchain;
 
-use actix_web::{server, App, HttpRequest};
-
-fn index(_req: &HttpRequest) -> &'static str {
-    "Hello world!"
-}
+use actix_web::{web, App, HttpServer};
 
 fn main() {
     let mut blockchain = blockchain::Blockchain::new();
@@ -14,8 +11,14 @@ fn main() {
     println!("{}", blockchain::Blockchain::hash(&block));
     println!("{}", blockchain::Blockchain::proof_of_work(1));
 
-    server::new(|| App::new().resource("/", |r| r.f(index)))
-        .bind("127.0.0.1:8088")
-        .unwrap()
-        .run();
+    HttpServer::new(|| {
+        App::new()
+            .data(web::JsonConfig::default().limit(4096))
+            .service(web::resource("/mine").route(web::get().to(api::mine)))
+            .service(web::resource("/transactions/new").route(web::post().to(api::new_transaction)))
+            .service(web::resource("/chain").route(web::get().to(api::chain)))
+    })
+    .bind("127.0.0.1:5000")
+    .unwrap()
+    .run();
 }
