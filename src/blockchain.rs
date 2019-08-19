@@ -20,7 +20,7 @@ pub struct Block<'a> {
 
 #[derive(Default)]
 pub struct Blockchain<'a> {
-    chain: Vec<Block<'a>>,
+    pub chain: Vec<Block<'a>>,
     current_transaction: Vec<Transaction<'a>>,
 }
 
