@@ -1,8 +1,9 @@
-use crate::blockchain::{Block, Blockchain};
+use crate::blockchain::{Block, Blockchain, Transaction};
 
 use actix_web::{web, HttpRequest, HttpResponse};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize)]
 pub struct TransactionResponse {
@@ -14,6 +15,15 @@ pub struct TransactionRequest {
     sender: String,
     recipient: String,
     amount: i64,
+}
+
+#[derive(Serialize)]
+pub struct MiningRespose {
+    message: String,
+    index: u64,
+    transactions: Vec<Transaction>,
+    proof: u64,
+    previous_hash: String,
 }
 
 #[derive(Serialize)]
@@ -37,10 +47,29 @@ pub fn new_transaction(
     })
 }
 
-pub fn mine(_req: HttpRequest) -> HttpResponse {
-    HttpResponse::Ok()
-        .content_type("text/plain")
-        .body("Mining a new block")
+pub fn mine(
+    node_identifier: web::Data<String>,
+    state: web::Data<Mutex<Blockchain>>,
+    _req: HttpRequest,
+) -> HttpResponse {
+    let (proof, previous_hash) = {
+        let mut blockchain = state.lock().unwrap();
+        let last_block = blockchain.last_block().unwrap();
+        let last_proof = last_block.proof;
+        let proof = Blockchain::proof_of_work(last_proof);
+        let previous_hash = Blockchain::hash(last_block);
+        (proof, previous_hash)
+    };
+    let mut blockchain = state.lock().unwrap();
+    blockchain.new_transaction("0", &*node_identifier, 1);
+    let block = blockchain.new_block(proof, Some(&previous_hash));
+    HttpResponse::Ok().json(MiningRespose {
+        message: "New Block Forged".to_string(),
+        index: block.index,
+        transactions: block.transactions,
+        proof: proof,
+        previous_hash: previous_hash,
+    })
 }
 
 pub fn chain(state: web::Data<Mutex<Blockchain>>, _req: HttpRequest) -> HttpResponse {

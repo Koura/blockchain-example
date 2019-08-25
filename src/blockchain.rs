@@ -3,7 +3,7 @@ use crypto_hash::{hex_digest, Algorithm};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Hash, Serialize, Deserialize)]
-struct Transaction {
+pub struct Transaction {
     sender: String,
     recipient: String,
     amount: i64,
@@ -11,11 +11,11 @@ struct Transaction {
 
 #[derive(Clone, Hash, Serialize, Deserialize)]
 pub struct Block {
-    index: u64,
+    pub index: u64,
     timestamp: DateTime<Utc>,
-    transactions: Vec<Transaction>,
-    proof: u64,
-    previous_hash: String,
+    pub transactions: Vec<Transaction>,
+    pub proof: u64,
+    pub previous_hash: String,
 }
 
 #[derive(Default)]
@@ -62,7 +62,7 @@ impl Blockchain {
             recipient: recipient.to_string(),
             amount,
         });
-        self.last_block() + 1
+        self.last_block().unwrap().index + 1
     }
     /// Simple Proof of Work Algorithm:
     /// - Find a number p' such that hash(pp') contains 4 leading zeroes,
@@ -90,7 +90,7 @@ impl Blockchain {
         hex_digest(Algorithm::SHA256, serialized.as_bytes())
     }
     /// Returns the last Block in the chain
-    pub fn last_block(&self) -> u64 {
-        0
+    pub fn last_block(&self) -> Option<&Block> {
+        self.chain.last()
     }
 }

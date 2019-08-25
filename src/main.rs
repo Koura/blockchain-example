@@ -5,6 +5,7 @@ pub mod blockchain;
 
 use actix_web::{web, App, HttpServer};
 use std::sync::Mutex;
+use uuid::Uuid;
 
 fn main() {
     let mut blockchain = blockchain::Blockchain::new();
@@ -13,10 +14,12 @@ fn main() {
     println!("{}", blockchain::Blockchain::proof_of_work(1));
     // TODO: make chain shared across threads
     let sharedchain = web::Data::new(Mutex::new(blockchain));
+    let node_identifier = web::Data::new(Uuid::new_v4().to_simple().to_string());
 
     HttpServer::new(move || {
         App::new()
             .register_data(sharedchain.clone())
+            .register_data(node_identifier.clone())
             .data(web::JsonConfig::default().limit(4096))
             .service(web::resource("/mine").route(web::get().to(api::mine)))
             .service(web::resource("/transactions/new").route(web::post().to(api::new_transaction)))
