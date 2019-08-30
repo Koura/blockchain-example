@@ -24,6 +24,8 @@ fn main() {
             .service(web::resource("/mine").route(web::get().to(api::mine)))
             .service(web::resource("/transactions/new").route(web::post().to(api::new_transaction)))
             .service(web::resource("/chain").route(web::get().to(api::chain)))
+            .service(web::resource("/nodes/register").route(web::post().to(api::register_node)))
+            .service(web::resource("/nodes/resolve").route(web::get().to(api::resolve_nodes)))
     })
     .bind("127.0.0.1:5000")
     .unwrap()

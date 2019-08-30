@@ -32,6 +32,18 @@ pub struct Chain {
     length: usize,
 }
 
+#[derive(Serialize)]
+pub struct RegisterResponse {
+    message: String,
+    total_nodes: usize,
+}
+
+#[derive(Serialize)]
+pub struct ResolveResponse {
+    message: String,
+    chain: Vec<Block>,
+}
+
 pub fn new_transaction(
     state: web::Data<Mutex<Blockchain>>,
     req: web::Json<TransactionRequest>,
@@ -77,5 +89,19 @@ pub fn chain(state: web::Data<Mutex<Blockchain>>, _req: HttpRequest) -> HttpResp
     HttpResponse::Ok().json(Chain {
         chain: state.lock().unwrap().chain.clone(),
         length: length,
+    })
+}
+
+pub fn register_node(reg: HttpRequest) -> HttpResponse {
+    HttpResponse::Created().json(RegisterResponse {
+        message: "hello world".to_string(),
+        total_nodes: 3,
+    })
+}
+
+pub fn resolve_nodes(__req: HttpRequest) -> HttpResponse {
+    HttpResponse::Ok().json(ResolveResponse {
+        message: "hello world".to_string(),
+        chain: Vec::new(),
     })
 }
