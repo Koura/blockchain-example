@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize)]
-pub struct TransactionResponse {
+pub struct MessageResponse {
     message: String,
 }
 
@@ -32,10 +32,15 @@ pub struct Chain {
     length: usize,
 }
 
+#[derive(Deserialize)]
+pub struct RegisterRequest {
+    nodes: Vec<String>,
+}
+
 #[derive(Serialize)]
 pub struct RegisterResponse {
     message: String,
-    total_nodes: usize,
+    total_nodes: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -54,7 +59,7 @@ pub fn new_transaction(
         .lock()
         .unwrap()
         .new_transaction(&sender, &recipient, req.amount);
-    HttpResponse::Created().json(TransactionResponse {
+    HttpResponse::Created().json(MessageResponse {
         message: format! {"Transaction will be added to Block {}", index},
     })
 }
@@ -92,10 +97,22 @@ pub fn chain(state: web::Data<Mutex<Blockchain>>, _req: HttpRequest) -> HttpResp
     })
 }
 
-pub fn register_node(reg: HttpRequest) -> HttpResponse {
+pub fn register_node(
+    state: web::Data<Mutex<Blockchain>>,
+    req: web::Json<RegisterRequest>,
+) -> HttpResponse {
+    if (req.nodes.is_empty()) {
+        return HttpResponse::BadRequest().json(MessageResponse {
+            message: "Error: Please supply a valid list of nodes".to_string(),
+        });
+    }
+    let mut blockchain = state.lock().unwrap();
+    for node in req.nodes.iter() {
+        blockchain.register_node(node)
+    }
     HttpResponse::Created().json(RegisterResponse {
-        message: "hello world".to_string(),
-        total_nodes: 3,
+        message: "New nodes have been added".to_string(),
+        total_nodes: blockchain.nodes.iter().cloned().collect(),
     })
 }
 

@@ -1,6 +1,8 @@
 use chrono::{DateTime, Utc};
 use crypto_hash::{hex_digest, Algorithm};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use urlparse::urlparse;
 
 #[derive(Clone, Hash, Serialize, Deserialize)]
 pub struct Transaction {
@@ -22,6 +24,7 @@ pub struct Block {
 pub struct Blockchain {
     pub chain: Vec<Block>,
     current_transaction: Vec<Transaction>,
+    pub nodes: HashSet<String>,
 }
 
 impl Blockchain {
@@ -29,6 +32,7 @@ impl Blockchain {
         let mut blockchain = Blockchain {
             chain: vec![],
             current_transaction: vec![],
+            nodes: HashSet::new(),
         };
         blockchain.new_block(100, Some("1"));
         blockchain
@@ -92,5 +96,14 @@ impl Blockchain {
     /// Returns the last Block in the chain
     pub fn last_block(&self) -> Option<&Block> {
         self.chain.last()
+    }
+
+    /// Add a new node to the list of nodes
+    ///
+    /// :param address: Address of the node. Eg. 'http://192.168.0.5:5000'
+    ///
+    pub fn register_node(&mut self, address: &str) {
+        let parsed_url = urlparse(address);
+        self.nodes.insert(parsed_url.netloc);
     }
 }
