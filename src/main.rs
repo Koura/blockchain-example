@@ -8,12 +8,8 @@ use std::sync::Mutex;
 use uuid::Uuid;
 
 fn main() {
-    let mut blockchain = blockchain::Blockchain::new();
-    let block = blockchain.new_block(100, Some("2"));
-    println!("{}", blockchain::Blockchain::hash(&block));
-    println!("{}", blockchain::Blockchain::proof_of_work(1));
     // TODO: make chain shared across threads
-    let sharedchain = web::Data::new(Mutex::new(blockchain));
+    let sharedchain = web::Data::new(Mutex::new(blockchain::Blockchain::new()));
     let node_identifier = web::Data::new(Uuid::new_v4().to_simple().to_string());
 
     HttpServer::new(move || {

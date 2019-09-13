@@ -1,17 +1,19 @@
+use crate::api::Chain;
 use chrono::{DateTime, Utc};
 use crypto_hash::{hex_digest, Algorithm};
+use reqwest;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use urlparse::urlparse;
 
-#[derive(Clone, Hash, Serialize, Deserialize)]
+#[derive(Clone, Hash, Serialize, Deserialize, Debug)]
 pub struct Transaction {
     sender: String,
     recipient: String,
     amount: i64,
 }
 
-#[derive(Clone, Hash, Serialize, Deserialize)]
+#[derive(Clone, Hash, Serialize, Deserialize, Debug)]
 pub struct Block {
     pub index: u64,
     timestamp: DateTime<Utc>,
@@ -105,5 +107,56 @@ impl Blockchain {
     pub fn register_node(&mut self, address: &str) {
         let parsed_url = urlparse(address);
         self.nodes.insert(parsed_url.netloc);
+    }
+
+    /// Determine if a given blockchain is valid
+    fn valid_chain(&self, chain: &Vec<Block>) -> bool {
+        let mut last_block = &chain[0];
+        let mut current_index: usize = 1;
+        while current_index < chain.len() {
+            let mut block = &chain[current_index];
+            println!("{:?}", last_block);
+            println!("{:?}", block);
+            println!("-----------");
+            if (block.previous_hash != Blockchain::hash(last_block)) {
+                return false;
+            }
+            if !Blockchain::valid_proof(last_block.proof, block.proof) {
+                return false;
+            }
+
+            last_block = block;
+            current_index += 1;
+        }
+        true
+    }
+
+    /// This is our Consensus Algorithm, it resolves conflicts
+    /// by replacing our chain with the longest one in the network.
+    ///
+    /// :return True if our chain was replaced and false otherwise
+    pub fn resolve_conflicts(&mut self) -> bool {
+        let mut max_length = self.chain.len();
+        let mut new_chain: Option<Vec<Block>> = None;
+
+        // Grab and verify the chains from all the nodes in our network
+        for node in &self.nodes {
+            let mut response = reqwest::get(&format!("http://{}/chain", node)).unwrap();
+            if response.status().is_success() {
+                let node_chain: Chain = response.json().unwrap();
+                if (node_chain.length > max_length && self.valid_chain(&node_chain.chain)) {
+                    max_length = node_chain.length;
+                    new_chain = Some(node_chain.chain);
+                }
+            }
+        }
+        // Replace our chain if we discovered a new, valid chain longer than ours
+        match new_chain {
+            Some(x) => {
+                self.chain = x;
+                true
+            }
+            None => false,
+        }
     }
 }

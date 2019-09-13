@@ -3,7 +3,6 @@ use crate::blockchain::{Block, Blockchain, Transaction};
 use actix_web::{web, HttpRequest, HttpResponse};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use uuid::Uuid;
 
 #[derive(Serialize, Deserialize)]
 pub struct MessageResponse {
@@ -26,10 +25,10 @@ pub struct MiningRespose {
     previous_hash: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Chain {
-    chain: Vec<Block>,
-    length: usize,
+    pub chain: Vec<Block>,
+    pub length: usize,
 }
 
 #[derive(Deserialize)]
@@ -116,9 +115,16 @@ pub fn register_node(
     })
 }
 
-pub fn resolve_nodes(__req: HttpRequest) -> HttpResponse {
+pub fn resolve_nodes(state: web::Data<Mutex<Blockchain>>, _req: HttpRequest) -> HttpResponse {
+    let mut blockchain = state.lock().unwrap();
+    let replaced = blockchain.resolve_conflicts();
+    let message = if replaced {
+        "Our chain was replaced"
+    } else {
+        "Our chain is authorative"
+    };
     HttpResponse::Ok().json(ResolveResponse {
-        message: "hello world".to_string(),
-        chain: Vec::new(),
+        message: message.to_string(),
+        chain: blockchain.chain.clone(),
     })
 }
