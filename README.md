@@ -4,10 +4,26 @@ This is a Rust implementation of a simple blockchain example based on Daniel va
 
 The example was written purely out of curiosity and for educational purposes. We advice not to run this in a production setup.
 
-# Prerequisite
+## Prerequisite
 
-# Running
+- [rust](https://www.rust-lang.org/tools/install) (tested with 1.36.0)
 
-# Contribution
+## Running
 
-Contributions are welcome.
+Start the server locally on port 5000:
+
+`cargo run`
+
+More nodes can be started on separate ports with:
+
+`cargo run -- --p 5001`
+
+## TODO
+
+- add tests
+- change `nodes/resolve` endpoint from `.to` -> `.to_async`
+- enable CI
+
+## Contribution
+
+Contributions are welcome, feel free to submit a pull request.
