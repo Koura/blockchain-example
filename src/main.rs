@@ -12,7 +12,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let port = match args.as_slice() {
         [_, key, value] => {
-            if (key == "--p") {
+            if key == "--p" {
                 value
             } else {
                 panic!("Illegal arguments passed to the program.");

@@ -69,7 +69,7 @@ pub fn mine(
     _req: HttpRequest,
 ) -> HttpResponse {
     let (proof, previous_hash) = {
-        let mut blockchain = state.lock().unwrap();
+        let blockchain = state.lock().unwrap();
         let last_block = blockchain.last_block().unwrap();
         let last_proof = last_block.proof;
         let proof = Blockchain::proof_of_work(last_proof);
@@ -83,8 +83,8 @@ pub fn mine(
         message: "New Block Forged".to_string(),
         index: block.index,
         transactions: block.transactions,
-        proof: proof,
-        previous_hash: previous_hash,
+        proof,
+        previous_hash,
     })
 }
 
@@ -92,7 +92,7 @@ pub fn chain(state: web::Data<Mutex<Blockchain>>, _req: HttpRequest) -> HttpResp
     let length = state.lock().unwrap().chain.len();
     HttpResponse::Ok().json(Chain {
         chain: state.lock().unwrap().chain.clone(),
-        length: length,
+        length,
     })
 }
 
@@ -100,7 +100,7 @@ pub fn register_node(
     state: web::Data<Mutex<Blockchain>>,
     req: web::Json<RegisterRequest>,
 ) -> HttpResponse {
-    if (req.nodes.is_empty()) {
+    if req.nodes.is_empty() {
         return HttpResponse::BadRequest().json(MessageResponse {
             message: "Error: Please supply a valid list of nodes".to_string(),
         });

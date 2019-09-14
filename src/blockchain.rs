@@ -110,15 +110,15 @@ impl Blockchain {
     }
 
     /// Determine if a given blockchain is valid
-    fn valid_chain(&self, chain: &Vec<Block>) -> bool {
+    fn valid_chain(&self, chain: &[Block]) -> bool {
         let mut last_block = &chain[0];
         let mut current_index: usize = 1;
         while current_index < chain.len() {
-            let mut block = &chain[current_index];
+            let block = &chain[current_index];
             println!("{:?}", last_block);
             println!("{:?}", block);
             println!("-----------");
-            if (block.previous_hash != Blockchain::hash(last_block)) {
+            if block.previous_hash != Blockchain::hash(last_block) {
                 return false;
             }
             if !Blockchain::valid_proof(last_block.proof, block.proof) {
@@ -144,7 +144,7 @@ impl Blockchain {
             let mut response = reqwest::get(&format!("http://{}/chain", node)).unwrap();
             if response.status().is_success() {
                 let node_chain: Chain = response.json().unwrap();
-                if (node_chain.length > max_length && self.valid_chain(&node_chain.chain)) {
+                if node_chain.length > max_length && self.valid_chain(&node_chain.chain) {
                     max_length = node_chain.length;
                     new_chain = Some(node_chain.chain);
                 }
