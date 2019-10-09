@@ -71,8 +71,7 @@ pub fn mine(
     let (proof, previous_hash) = {
         let blockchain = state.lock().unwrap();
         let last_block = blockchain.last_block().unwrap();
-        let last_proof = last_block.proof;
-        let proof = Blockchain::proof_of_work(last_proof);
+        let proof = Blockchain::proof_of_work(&last_block);
         let previous_hash = Blockchain::hash(last_block);
         (proof, previous_hash)
     };

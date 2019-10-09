@@ -73,16 +73,18 @@ impl Blockchain {
     /// Simple Proof of Work Algorithm:
     /// - Find a number p' such that hash(pp') contains 4 leading zeroes,
     ///   where p is the previous proof, and p' is the new proof
-    pub fn proof_of_work(last_proof: u64) -> u64 {
+    pub fn proof_of_work(last_block: &Block) -> u64 {
         let mut proof = 0;
-        while !Self::valid_proof(last_proof, proof) {
+        let last_proof = last_block.proof;
+        let last_hash = &last_block.previous_hash;
+        while !Self::valid_proof(last_proof, proof, last_hash) {
             proof += 1;
         }
         proof
     }
-    /// Validates the Proof: Does hash(last_proof, proof) containt 4 leading zeroes?
-    fn valid_proof(last_proof: u64, proof: u64) -> bool {
-        let guess = format!("{}{}", last_proof, proof);
+    /// Validates the Proof: Does hash(last_proof, proof, last_hash) containt 4 leading zeroes?
+    fn valid_proof(last_proof: u64, proof: u64, last_hash: &String) -> bool {
+        let guess = format!("{}{}{}", last_proof, proof, last_hash);
         let guess_hash = hex_digest(Algorithm::SHA256, guess.as_bytes());
         guess_hash.ends_with("0000")
     }
@@ -121,7 +123,7 @@ impl Blockchain {
             if block.previous_hash != Blockchain::hash(last_block) {
                 return false;
             }
-            if !Blockchain::valid_proof(last_block.proof, block.proof) {
+            if !Blockchain::valid_proof(last_block.proof, block.proof, &last_block.previous_hash) {
                 return false;
             }
 
