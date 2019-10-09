@@ -25,7 +25,7 @@ pub struct Block {
 #[derive(Default)]
 pub struct Blockchain {
     pub chain: Vec<Block>,
-    current_transaction: Vec<Transaction>,
+    current_transactions: Vec<Transaction>,
     pub nodes: HashSet<String>,
 }
 
@@ -33,7 +33,7 @@ impl Blockchain {
     pub fn new() -> Blockchain {
         let mut blockchain = Blockchain {
             chain: vec![],
-            current_transaction: vec![],
+            current_transactions: vec![],
             nodes: HashSet::new(),
         };
         blockchain.new_block(100, Some("1"));
@@ -48,7 +48,7 @@ impl Blockchain {
         let block = Block {
             index: (self.chain.len() + 1) as u64,
             timestamp: Utc::now(),
-            transactions: self.current_transaction.drain(0..).collect(),
+            transactions: self.current_transactions.drain(0..).collect(),
             proof,
             previous_hash: previous_hash.unwrap_or("0").to_string(),
         };
@@ -63,7 +63,7 @@ impl Blockchain {
     /// :param amount: Amount
     /// :return: The index of the Block that will hold this transaction
     pub fn new_transaction(&mut self, sender: &str, recipient: &str, amount: i64) -> u64 {
-        self.current_transaction.push(Transaction {
+        self.current_transactions.push(Transaction {
             sender: sender.to_string(),
             recipient: recipient.to_string(),
             amount,
